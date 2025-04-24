@@ -25,7 +25,7 @@ const AI2_ICON_URL = 'https://files.catbox.moe/8l6qb6.png';
 
 // call the ai endpoint
 async function callAI(message) {
-  const res = await axios.post("https://ai.hackclub.com/chat/completions", {
+  const res = await axios.post("https://ai.hackclub.com/chat/completions/", {
     messages: [{ role: "user", content: message }]
   }, { headers: { "Content-Type": "application/json" } });
 
@@ -45,13 +45,18 @@ async function continueConversation(text, channel, thread_ts) {
 
   // switch turns
   currentTurn = currentTurn === 'AI1' ? 'AI2' : 'AI1';
+
+  // Continue the conversation
+  if (isActive) {
+    setTimeout(() => continueConversation(response, channel, thread_ts), 1000);
+  }
 }
 
 // listen for messages to start the convo
 slackApp.event('message', async ({ event, client }) => {
   if (event.user !== OWNER_ID || event.bot_id) return;
 
-  if (event.text === 'i love ai convos') {
+  if (event.text === 'i like ai') {
     isActive = true;
     threadTs = null;
 
@@ -64,7 +69,7 @@ slackApp.event('message', async ({ event, client }) => {
 
     threadTs = res.ts;
 
-    // ai1 starts the convo in the thread
+    // ai1 starts the conversation in the thread
     await continueConversation("hello", event.channel, threadTs);
   }
 
@@ -74,7 +79,7 @@ slackApp.event('message', async ({ event, client }) => {
   }
 });
 
-// listen for messages to continue the convo
+// listen for messages to continue the conversation
 slackApp.event('message', async ({ event }) => {
   if (!isActive || event.thread_ts !== threadTs || event.bot_id !== process.env.BOT_ID) return;
 
